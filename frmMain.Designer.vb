@@ -31,7 +31,7 @@ Partial Class frmMain
         lstTables = New CheckedListBox()
         btnGenerate = New Button()
         btnSelectOutput = New Button()
-        btnOpenOutput = New Button()
+        btnBackupDatabase = New Button()
         txtOutput = New TextBox()
         chkIncludeData = New CheckBox()
         chkTables = New CheckBox()
@@ -73,9 +73,9 @@ Partial Class frmMain
         lblTableSearch = New Label()
         pnlLeft = New Panel()
         grpGeneration = New GroupBox()
+        lblProgress = New Label()
         pnlProgress = New Panel()
         progressBar = New ProgressBar()
-        lblProgress = New Label()
         pnlGenerationActions = New Panel()
         lblOutput = New Label()
         grpOptions = New GroupBox()
@@ -113,12 +113,12 @@ Partial Class frmMain
         btnSelectAll.BackColor = Color.FromArgb(CByte(0), CByte(120), CByte(215))
         btnSelectAll.FlatAppearance.BorderSize = 0
         btnSelectAll.FlatStyle = FlatStyle.Flat
-        btnSelectAll.Font = New Font("Segoe UI", 9.0F, FontStyle.Bold)
+        btnSelectAll.Font = New Font("Segoe UI", 9F, FontStyle.Bold)
         btnSelectAll.ForeColor = Color.White
-        btnSelectAll.Location = New Point(0, 10)
+        btnSelectAll.Location = New Point(0, 8)
         btnSelectAll.Margin = New Padding(2)
         btnSelectAll.Name = "btnSelectAll"
-        btnSelectAll.Size = New Size(72, 28)
+        btnSelectAll.Size = New Size(112, 28)
         btnSelectAll.TabIndex = 0
         btnSelectAll.Text = "Select All"
         toolTip.SetToolTip(btnSelectAll, "Select all tables in the list")
@@ -129,12 +129,12 @@ Partial Class frmMain
         btnSelectNone.BackColor = Color.FromArgb(CByte(108), CByte(117), CByte(125))
         btnSelectNone.FlatAppearance.BorderSize = 0
         btnSelectNone.FlatStyle = FlatStyle.Flat
-        btnSelectNone.Font = New Font("Segoe UI", 9.0F, FontStyle.Bold)
+        btnSelectNone.Font = New Font("Segoe UI", 9F, FontStyle.Bold)
         btnSelectNone.ForeColor = Color.White
-        btnSelectNone.Location = New Point(77, 10)
+        btnSelectNone.Location = New Point(124, 8)
         btnSelectNone.Margin = New Padding(2)
         btnSelectNone.Name = "btnSelectNone"
-        btnSelectNone.Size = New Size(72, 28)
+        btnSelectNone.Size = New Size(112, 28)
         btnSelectNone.TabIndex = 1
         btnSelectNone.Text = "Select None"
         toolTip.SetToolTip(btnSelectNone, "Deselect all tables in the list")
@@ -145,12 +145,12 @@ Partial Class frmMain
         btnInvertSelection.BackColor = Color.FromArgb(CByte(40), CByte(167), CByte(69))
         btnInvertSelection.FlatAppearance.BorderSize = 0
         btnInvertSelection.FlatStyle = FlatStyle.Flat
-        btnInvertSelection.Font = New Font("Segoe UI", 9.0F, FontStyle.Bold)
+        btnInvertSelection.Font = New Font("Segoe UI", 9F, FontStyle.Bold)
         btnInvertSelection.ForeColor = Color.White
-        btnInvertSelection.Location = New Point(154, 10)
+        btnInvertSelection.Location = New Point(248, 8)
         btnInvertSelection.Margin = New Padding(2)
         btnInvertSelection.Name = "btnInvertSelection"
-        btnInvertSelection.Size = New Size(73, 28)
+        btnInvertSelection.Size = New Size(112, 28)
         btnInvertSelection.TabIndex = 2
         btnInvertSelection.Text = "Invert Selection"
         toolTip.SetToolTip(btnInvertSelection, "Invert the current selection")
@@ -159,7 +159,7 @@ Partial Class frmMain
         ' txtTableSearch
         ' 
         txtTableSearch.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
-        txtTableSearch.Font = New Font("Segoe UI", 10.0F)
+        txtTableSearch.Font = New Font("Segoe UI", 10F)
         txtTableSearch.Location = New Point(13, 46)
         txtTableSearch.Margin = New Padding(2)
         txtTableSearch.Name = "txtTableSearch"
@@ -173,12 +173,12 @@ Partial Class frmMain
         lstTables.BackColor = Color.White
         lstTables.BorderStyle = BorderStyle.FixedSingle
         lstTables.CheckOnClick = True
-        lstTables.Font = New Font("Segoe UI", 9.0F)
+        lstTables.Font = New Font("Segoe UI", 9F)
         lstTables.IntegralHeight = False
         lstTables.Location = New Point(13, 75)
         lstTables.Margin = New Padding(2)
         lstTables.Name = "lstTables"
-        lstTables.Size = New Size(509, 470)
+        lstTables.Size = New Size(509, 427)
         lstTables.TabIndex = 2
         toolTip.SetToolTip(lstTables, "Select tables to include in the script generation")
         ' 
@@ -187,12 +187,12 @@ Partial Class frmMain
         btnGenerate.BackColor = Color.FromArgb(CByte(40), CByte(167), CByte(69))
         btnGenerate.FlatAppearance.BorderSize = 0
         btnGenerate.FlatStyle = FlatStyle.Flat
-        btnGenerate.Font = New Font("Segoe UI", 10.0F, FontStyle.Bold)
+        btnGenerate.Font = New Font("Segoe UI", 10F, FontStyle.Bold)
         btnGenerate.ForeColor = Color.White
         btnGenerate.Location = New Point(15, 30)
         btnGenerate.Margin = New Padding(2)
         btnGenerate.Name = "btnGenerate"
-        btnGenerate.Size = New Size(109, 32)
+        btnGenerate.Size = New Size(116, 32)
         btnGenerate.TabIndex = 0
         btnGenerate.Text = "🚀 Generate SQL"
         toolTip.SetToolTip(btnGenerate, "Generate SQL scripts for selected objects")
@@ -203,49 +203,49 @@ Partial Class frmMain
         btnSelectOutput.BackColor = Color.FromArgb(CByte(0), CByte(120), CByte(215))
         btnSelectOutput.FlatAppearance.BorderSize = 0
         btnSelectOutput.FlatStyle = FlatStyle.Flat
-        btnSelectOutput.Font = New Font("Segoe UI", 9.0F, FontStyle.Bold)
+        btnSelectOutput.Font = New Font("Segoe UI", 9F, FontStyle.Bold)
         btnSelectOutput.ForeColor = Color.White
-        btnSelectOutput.Location = New Point(128, 30)
+        btnSelectOutput.Location = New Point(143, 30)
         btnSelectOutput.Margin = New Padding(2)
         btnSelectOutput.Name = "btnSelectOutput"
-        btnSelectOutput.Size = New Size(109, 32)
+        btnSelectOutput.Size = New Size(116, 32)
         btnSelectOutput.TabIndex = 1
         btnSelectOutput.Text = "📁 Select Output"
         toolTip.SetToolTip(btnSelectOutput, "Choose the output directory for SQL scripts")
         btnSelectOutput.UseVisualStyleBackColor = False
         ' 
-        ' btnOpenOutput
+        ' btnBackupDatabase
         ' 
-        btnOpenOutput.BackColor = Color.FromArgb(CByte(108), CByte(117), CByte(125))
-        btnOpenOutput.FlatAppearance.BorderSize = 0
-        btnOpenOutput.FlatStyle = FlatStyle.Flat
-        btnOpenOutput.Font = New Font("Segoe UI", 9.0F, FontStyle.Bold)
-        btnOpenOutput.ForeColor = Color.White
-        btnOpenOutput.Location = New Point(241, 30)
-        btnOpenOutput.Margin = New Padding(2)
-        btnOpenOutput.Name = "btnOpenOutput"
-        btnOpenOutput.Size = New Size(109, 32)
-        btnOpenOutput.TabIndex = 2
-        btnOpenOutput.Text = "📂 Open Folder"
-        toolTip.SetToolTip(btnOpenOutput, "Open output folder in Windows Explorer")
-        btnOpenOutput.UseVisualStyleBackColor = False
+        btnBackupDatabase.BackColor = Color.FromArgb(CByte(220), CByte(53), CByte(69))
+        btnBackupDatabase.FlatAppearance.BorderSize = 0
+        btnBackupDatabase.FlatStyle = FlatStyle.Flat
+        btnBackupDatabase.Font = New Font("Segoe UI", 9F, FontStyle.Bold)
+        btnBackupDatabase.ForeColor = Color.White
+        btnBackupDatabase.Location = New Point(271, 30)
+        btnBackupDatabase.Margin = New Padding(2)
+        btnBackupDatabase.Name = "btnBackupDatabase"
+        btnBackupDatabase.Size = New Size(116, 32)
+        btnBackupDatabase.TabIndex = 2
+        btnBackupDatabase.Text = "💾 Backup DB"
+        toolTip.SetToolTip(btnBackupDatabase, "Create database backup and zip file with timestamp")
+        btnBackupDatabase.UseVisualStyleBackColor = False
         ' 
         ' txtOutput
         ' 
         txtOutput.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
-        txtOutput.Font = New Font("Segoe UI", 9.0F)
-        txtOutput.Location = New Point(10, 147)
+        txtOutput.Font = New Font("Segoe UI", 9F)
+        txtOutput.Location = New Point(15, 90)
         txtOutput.Margin = New Padding(2)
         txtOutput.Name = "txtOutput"
         txtOutput.ReadOnly = True
-        txtOutput.Size = New Size(375, 23)
+        txtOutput.Size = New Size(371, 23)
         txtOutput.TabIndex = 1
         toolTip.SetToolTip(txtOutput, "Output directory path")
         ' 
         ' chkIncludeData
         ' 
         chkIncludeData.AutoSize = True
-        chkIncludeData.Font = New Font("Segoe UI", 9.0F, FontStyle.Bold)
+        chkIncludeData.Font = New Font("Segoe UI", 9F, FontStyle.Bold)
         chkIncludeData.ForeColor = Color.FromArgb(CByte(220), CByte(53), CByte(69))
         chkIncludeData.Location = New Point(192, 45)
         chkIncludeData.Margin = New Padding(2)
@@ -347,14 +347,14 @@ Partial Class frmMain
         btnTestConnection.BackColor = Color.FromArgb(CByte(0), CByte(120), CByte(215))
         btnTestConnection.FlatAppearance.BorderSize = 0
         btnTestConnection.FlatStyle = FlatStyle.Flat
-        btnTestConnection.Font = New Font("Segoe UI", 9.0F, FontStyle.Bold)
+        btnTestConnection.Font = New Font("Segoe UI", 9F, FontStyle.Bold)
         btnTestConnection.ForeColor = Color.White
-        btnTestConnection.Location = New Point(0, 5)
+        btnTestConnection.Location = New Point(0, 4)
         btnTestConnection.Margin = New Padding(2)
         btnTestConnection.Name = "btnTestConnection"
-        btnTestConnection.Size = New Size(104, 26)
+        btnTestConnection.Size = New Size(114, 26)
         btnTestConnection.TabIndex = 0
-        btnTestConnection.Text = "🔌 Test Connection"
+        btnTestConnection.Text = "🔌 Connect"
         toolTip.SetToolTip(btnTestConnection, "Test the database connection with current settings")
         btnTestConnection.UseVisualStyleBackColor = False
         ' 
@@ -363,12 +363,12 @@ Partial Class frmMain
         btnLoadTables.BackColor = Color.FromArgb(CByte(40), CByte(167), CByte(69))
         btnLoadTables.FlatAppearance.BorderSize = 0
         btnLoadTables.FlatStyle = FlatStyle.Flat
-        btnLoadTables.Font = New Font("Segoe UI", 9.0F, FontStyle.Bold)
+        btnLoadTables.Font = New Font("Segoe UI", 9F, FontStyle.Bold)
         btnLoadTables.ForeColor = Color.White
-        btnLoadTables.Location = New Point(109, 5)
+        btnLoadTables.Location = New Point(129, 4)
         btnLoadTables.Margin = New Padding(2)
         btnLoadTables.Name = "btnLoadTables"
-        btnLoadTables.Size = New Size(88, 26)
+        btnLoadTables.Size = New Size(114, 26)
         btnLoadTables.TabIndex = 1
         btnLoadTables.Text = "📋 Load Tables"
         toolTip.SetToolTip(btnLoadTables, "Load tables from the database")
@@ -379,12 +379,12 @@ Partial Class frmMain
         btnSaveProfile.BackColor = Color.FromArgb(CByte(108), CByte(117), CByte(125))
         btnSaveProfile.FlatAppearance.BorderSize = 0
         btnSaveProfile.FlatStyle = FlatStyle.Flat
-        btnSaveProfile.Font = New Font("Segoe UI", 9.0F, FontStyle.Bold)
+        btnSaveProfile.Font = New Font("Segoe UI", 9F, FontStyle.Bold)
         btnSaveProfile.ForeColor = Color.White
-        btnSaveProfile.Location = New Point(202, 5)
+        btnSaveProfile.Location = New Point(258, 4)
         btnSaveProfile.Margin = New Padding(2)
         btnSaveProfile.Name = "btnSaveProfile"
-        btnSaveProfile.Size = New Size(88, 26)
+        btnSaveProfile.Size = New Size(114, 26)
         btnSaveProfile.TabIndex = 2
         btnSaveProfile.Text = "💾 Save Profile"
         toolTip.SetToolTip(btnSaveProfile, "Save current connection settings as profile")
@@ -393,7 +393,7 @@ Partial Class frmMain
         ' txtServer
         ' 
         txtServer.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
-        txtServer.Font = New Font("Segoe UI", 10.0F)
+        txtServer.Font = New Font("Segoe UI", 10F)
         txtServer.Location = New Point(98, 5)
         txtServer.Margin = New Padding(2, 5, 2, 2)
         txtServer.Name = "txtServer"
@@ -404,7 +404,7 @@ Partial Class frmMain
         ' txtDatabase
         ' 
         txtDatabase.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
-        txtDatabase.Font = New Font("Segoe UI", 10.0F)
+        txtDatabase.Font = New Font("Segoe UI", 10F)
         txtDatabase.Location = New Point(98, 37)
         txtDatabase.Margin = New Padding(2, 5, 2, 2)
         txtDatabase.Name = "txtDatabase"
@@ -415,7 +415,7 @@ Partial Class frmMain
         ' txtUsername
         ' 
         txtUsername.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
-        txtUsername.Font = New Font("Segoe UI", 10.0F)
+        txtUsername.Font = New Font("Segoe UI", 10F)
         txtUsername.Location = New Point(98, 69)
         txtUsername.Margin = New Padding(2, 5, 2, 2)
         txtUsername.Name = "txtUsername"
@@ -426,7 +426,7 @@ Partial Class frmMain
         ' txtPassword
         ' 
         txtPassword.Anchor = AnchorStyles.Top Or AnchorStyles.Left Or AnchorStyles.Right
-        txtPassword.Font = New Font("Segoe UI", 10.0F)
+        txtPassword.Font = New Font("Segoe UI", 10F)
         txtPassword.Location = New Point(98, 101)
         txtPassword.Margin = New Padding(2, 5, 2, 2)
         txtPassword.Name = "txtPassword"
@@ -439,7 +439,7 @@ Partial Class frmMain
         ' 
         chkIntegratedSecurity.AutoSize = True
         chkIntegratedSecurity.Dock = DockStyle.Fill
-        chkIntegratedSecurity.Font = New Font("Segoe UI", 9.0F, FontStyle.Bold)
+        chkIntegratedSecurity.Font = New Font("Segoe UI", 9F, FontStyle.Bold)
         chkIntegratedSecurity.ForeColor = Color.FromArgb(CByte(0), CByte(120), CByte(215))
         chkIntegratedSecurity.Location = New Point(98, 130)
         chkIntegratedSecurity.Margin = New Padding(2)
@@ -453,7 +453,7 @@ Partial Class frmMain
         ' menuStrip
         ' 
         menuStrip.BackColor = Color.White
-        menuStrip.Font = New Font("Segoe UI", 9.0F)
+        menuStrip.Font = New Font("Segoe UI", 9F)
         menuStrip.ImageScalingSize = New Size(20, 20)
         menuStrip.Items.AddRange(New ToolStripItem() {fileToolStripMenuItem, toolsToolStripMenuItem, helpToolStripMenuItem})
         menuStrip.Location = New Point(0, 0)
@@ -530,10 +530,10 @@ Partial Class frmMain
         ' statusStrip
         ' 
         statusStrip.BackColor = Color.FromArgb(CByte(240), CByte(240), CByte(240))
-        statusStrip.Font = New Font("Segoe UI", 9.0F)
+        statusStrip.Font = New Font("Segoe UI", 9F)
         statusStrip.ImageScalingSize = New Size(20, 20)
         statusStrip.Items.AddRange(New ToolStripItem() {toolStripStatusLabel, toolStripProgressBar, toolStripSpring, toolStripConnectionStatus})
-        statusStrip.Location = New Point(0, 650)
+        statusStrip.Location = New Point(0, 597)
         statusStrip.Name = "statusStrip"
         statusStrip.Padding = New Padding(1, 0, 15, 0)
         statusStrip.Size = New Size(967, 22)
@@ -573,7 +573,7 @@ Partial Class frmMain
         pnlMain.Margin = New Padding(2)
         pnlMain.Name = "pnlMain"
         pnlMain.Padding = New Padding(10)
-        pnlMain.Size = New Size(967, 626)
+        pnlMain.Size = New Size(967, 573)
         pnlMain.TabIndex = 2
         ' 
         ' pnlRight
@@ -582,7 +582,7 @@ Partial Class frmMain
         pnlRight.Location = New Point(422, 10)
         pnlRight.Margin = New Padding(2)
         pnlRight.Name = "pnlRight"
-        pnlRight.Size = New Size(534, 606)
+        pnlRight.Size = New Size(534, 555)
         pnlRight.TabIndex = 2
         ' 
         ' grpTables
@@ -591,14 +591,13 @@ Partial Class frmMain
         grpTables.Controls.Add(txtTableSearch)
         grpTables.Controls.Add(lblTableSearch)
         grpTables.Controls.Add(lstTables)
-        grpTables.Dock = DockStyle.Fill
-        grpTables.Font = New Font("Segoe UI", 10.0F, FontStyle.Bold)
+        grpTables.Font = New Font("Segoe UI", 10F, FontStyle.Bold)
         grpTables.ForeColor = Color.FromArgb(CByte(64), CByte(64), CByte(64))
         grpTables.Location = New Point(0, 0)
         grpTables.Margin = New Padding(2)
         grpTables.Name = "grpTables"
         grpTables.Padding = New Padding(13, 10, 13, 13)
-        grpTables.Size = New Size(534, 606)
+        grpTables.Size = New Size(534, 555)
         grpTables.TabIndex = 0
         grpTables.TabStop = False
         grpTables.Text = "📋 Database Tables & Objects"
@@ -609,9 +608,8 @@ Partial Class frmMain
         pnlTableActions.Controls.Add(btnSelectNone)
         pnlTableActions.Controls.Add(btnInvertSelection)
         pnlTableActions.Controls.Add(lblTableCount)
-        pnlTableActions.Dock = DockStyle.Bottom
-        pnlTableActions.Font = New Font("Segoe UI", 9.0F)
-        pnlTableActions.Location = New Point(13, 549)
+        pnlTableActions.Font = New Font("Segoe UI", 9F)
+        pnlTableActions.Location = New Point(13, 509)
         pnlTableActions.Margin = New Padding(2)
         pnlTableActions.Name = "pnlTableActions"
         pnlTableActions.Size = New Size(508, 44)
@@ -620,9 +618,9 @@ Partial Class frmMain
         ' lblTableCount
         ' 
         lblTableCount.Anchor = AnchorStyles.Top Or AnchorStyles.Right
-        lblTableCount.Font = New Font("Segoe UI", 9.0F, FontStyle.Italic)
+        lblTableCount.Font = New Font("Segoe UI", 9F, FontStyle.Italic)
         lblTableCount.ForeColor = Color.FromArgb(CByte(108), CByte(117), CByte(125))
-        lblTableCount.Location = New Point(388, 10)
+        lblTableCount.Location = New Point(385, 17)
         lblTableCount.Margin = New Padding(2, 0, 2, 0)
         lblTableCount.Name = "lblTableCount"
         lblTableCount.Size = New Size(120, 16)
@@ -633,7 +631,7 @@ Partial Class frmMain
         ' lblTableSearch
         ' 
         lblTableSearch.AutoSize = True
-        lblTableSearch.Font = New Font("Segoe UI", 9.0F)
+        lblTableSearch.Font = New Font("Segoe UI", 9F)
         lblTableSearch.ForeColor = Color.FromArgb(CByte(73), CByte(80), CByte(87))
         lblTableSearch.Location = New Point(13, 28)
         lblTableSearch.Margin = New Padding(2, 0, 2, 0)
@@ -647,73 +645,68 @@ Partial Class frmMain
         pnlLeft.Controls.Add(grpGeneration)
         pnlLeft.Controls.Add(grpOptions)
         pnlLeft.Controls.Add(grpConnection)
-        pnlLeft.Dock = DockStyle.Left
         pnlLeft.Location = New Point(10, 10)
         pnlLeft.Margin = New Padding(2)
         pnlLeft.Name = "pnlLeft"
-        pnlLeft.Size = New Size(400, 606)
+        pnlLeft.Size = New Size(400, 554)
         pnlLeft.TabIndex = 0
         ' 
         ' grpGeneration
         ' 
+        grpGeneration.Controls.Add(lblProgress)
         grpGeneration.Controls.Add(btnGenerate)
         grpGeneration.Controls.Add(btnSelectOutput)
         grpGeneration.Controls.Add(pnlProgress)
-        grpGeneration.Controls.Add(btnOpenOutput)
+        grpGeneration.Controls.Add(btnBackupDatabase)
         grpGeneration.Controls.Add(pnlGenerationActions)
         grpGeneration.Controls.Add(txtOutput)
         grpGeneration.Controls.Add(lblOutput)
-        grpGeneration.Dock = DockStyle.Fill
-        grpGeneration.Font = New Font("Segoe UI", 10.0F, FontStyle.Bold)
+        grpGeneration.Font = New Font("Segoe UI", 10F, FontStyle.Bold)
         grpGeneration.ForeColor = Color.FromArgb(CByte(64), CByte(64), CByte(64))
         grpGeneration.Location = New Point(0, 389)
         grpGeneration.Margin = New Padding(2)
         grpGeneration.Name = "grpGeneration"
         grpGeneration.Padding = New Padding(13, 10, 13, 13)
-        grpGeneration.Size = New Size(400, 217)
+        grpGeneration.Size = New Size(400, 166)
         grpGeneration.TabIndex = 2
         grpGeneration.TabStop = False
         grpGeneration.Text = "⚡ Script Generation"
         ' 
+        ' lblProgress
+        ' 
+        lblProgress.Font = New Font("Segoe UI", 9F, FontStyle.Italic)
+        lblProgress.ForeColor = Color.FromArgb(CByte(108), CByte(117), CByte(125))
+        lblProgress.Location = New Point(12, 118)
+        lblProgress.Margin = New Padding(2, 0, 2, 0)
+        lblProgress.Name = "lblProgress"
+        lblProgress.Size = New Size(374, 15)
+        lblProgress.TabIndex = 4
+        lblProgress.Text = "Generating scripts..."
+        ' 
         ' pnlProgress
         ' 
         pnlProgress.Controls.Add(progressBar)
-        pnlProgress.Controls.Add(lblProgress)
-        pnlProgress.Dock = DockStyle.Bottom
-        pnlProgress.Font = New Font("Segoe UI", 9.0F)
-        pnlProgress.Location = New Point(13, 180)
+        pnlProgress.Font = New Font("Segoe UI", 9F)
+        pnlProgress.Location = New Point(15, 137)
         pnlProgress.Margin = New Padding(2)
         pnlProgress.Name = "pnlProgress"
-        pnlProgress.Size = New Size(374, 24)
+        pnlProgress.Size = New Size(370, 15)
         pnlProgress.TabIndex = 3
         pnlProgress.Visible = False
         ' 
         ' progressBar
         ' 
-        progressBar.Dock = DockStyle.Fill
-        progressBar.Location = New Point(0, 16)
+        progressBar.Location = New Point(0, 0)
         progressBar.Margin = New Padding(2)
         progressBar.Name = "progressBar"
-        progressBar.Size = New Size(374, 8)
+        progressBar.Size = New Size(373, 13)
         progressBar.Style = ProgressBarStyle.Continuous
         progressBar.TabIndex = 1
         ' 
-        ' lblProgress
-        ' 
-        lblProgress.Dock = DockStyle.Top
-        lblProgress.Font = New Font("Segoe UI", 9.0F, FontStyle.Italic)
-        lblProgress.ForeColor = Color.FromArgb(CByte(108), CByte(117), CByte(125))
-        lblProgress.Location = New Point(0, 0)
-        lblProgress.Margin = New Padding(2, 0, 2, 0)
-        lblProgress.Name = "lblProgress"
-        lblProgress.Size = New Size(374, 16)
-        lblProgress.TabIndex = 0
-        lblProgress.Text = "Generating scripts..."
-        ' 
         ' pnlGenerationActions
         ' 
-        pnlGenerationActions.Font = New Font("Segoe UI", 9.0F)
-        pnlGenerationActions.Location = New Point(13, 100)
+        pnlGenerationActions.Font = New Font("Segoe UI", 9F)
+        pnlGenerationActions.Location = New Point(15, 29)
         pnlGenerationActions.Margin = New Padding(2)
         pnlGenerationActions.Name = "pnlGenerationActions"
         pnlGenerationActions.Size = New Size(374, 32)
@@ -722,9 +715,9 @@ Partial Class frmMain
         ' lblOutput
         ' 
         lblOutput.AutoSize = True
-        lblOutput.Font = New Font("Segoe UI", 9.0F)
+        lblOutput.Font = New Font("Segoe UI", 9F)
         lblOutput.ForeColor = Color.FromArgb(CByte(73), CByte(80), CByte(87))
-        lblOutput.Location = New Point(13, 81)
+        lblOutput.Location = New Point(12, 69)
         lblOutput.Margin = New Padding(2, 0, 2, 0)
         lblOutput.Name = "lblOutput"
         lblOutput.Size = New Size(97, 15)
@@ -735,7 +728,7 @@ Partial Class frmMain
         ' 
         grpOptions.Controls.Add(pnlOptions)
         grpOptions.Dock = DockStyle.Top
-        grpOptions.Font = New Font("Segoe UI", 10.0F, FontStyle.Bold)
+        grpOptions.Font = New Font("Segoe UI", 10F, FontStyle.Bold)
         grpOptions.ForeColor = Color.FromArgb(CByte(64), CByte(64), CByte(64))
         grpOptions.Location = New Point(0, 278)
         grpOptions.Margin = New Padding(2)
@@ -757,7 +750,7 @@ Partial Class frmMain
         pnlOptions.Controls.Add(chkTriggers)
         pnlOptions.Controls.Add(chkPermissions)
         pnlOptions.Dock = DockStyle.Fill
-        pnlOptions.Font = New Font("Segoe UI", 9.0F)
+        pnlOptions.Font = New Font("Segoe UI", 9F)
         pnlOptions.Location = New Point(13, 28)
         pnlOptions.Margin = New Padding(2)
         pnlOptions.Name = "pnlOptions"
@@ -770,7 +763,7 @@ Partial Class frmMain
         grpConnection.Controls.Add(pnlConnectionActions)
         grpConnection.Controls.Add(tblConnection)
         grpConnection.Dock = DockStyle.Top
-        grpConnection.Font = New Font("Segoe UI", 10.0F, FontStyle.Bold)
+        grpConnection.Font = New Font("Segoe UI", 10F, FontStyle.Bold)
         grpConnection.ForeColor = Color.FromArgb(CByte(64), CByte(64), CByte(64))
         grpConnection.Location = New Point(0, 0)
         grpConnection.Margin = New Padding(2)
@@ -786,7 +779,7 @@ Partial Class frmMain
         pnlConnectionStatus.Controls.Add(lblConnectionStatus)
         pnlConnectionStatus.Controls.Add(picConnectionStatus)
         pnlConnectionStatus.Dock = DockStyle.Bottom
-        pnlConnectionStatus.Font = New Font("Segoe UI", 9.0F)
+        pnlConnectionStatus.Font = New Font("Segoe UI", 9F)
         pnlConnectionStatus.Location = New Point(13, 207)
         pnlConnectionStatus.Margin = New Padding(2)
         pnlConnectionStatus.Name = "pnlConnectionStatus"
@@ -796,7 +789,7 @@ Partial Class frmMain
         ' lblConnectionStatus
         ' 
         lblConnectionStatus.AutoSize = True
-        lblConnectionStatus.Font = New Font("Segoe UI", 9.0F, FontStyle.Bold)
+        lblConnectionStatus.Font = New Font("Segoe UI", 9F, FontStyle.Bold)
         lblConnectionStatus.ForeColor = Color.FromArgb(CByte(220), CByte(53), CByte(69))
         lblConnectionStatus.Location = New Point(19, 5)
         lblConnectionStatus.Margin = New Padding(2, 0, 2, 0)
@@ -821,7 +814,7 @@ Partial Class frmMain
         pnlConnectionActions.Controls.Add(btnLoadTables)
         pnlConnectionActions.Controls.Add(btnSaveProfile)
         pnlConnectionActions.Dock = DockStyle.Bottom
-        pnlConnectionActions.Font = New Font("Segoe UI", 9.0F)
+        pnlConnectionActions.Font = New Font("Segoe UI", 9F)
         pnlConnectionActions.Location = New Point(13, 233)
         pnlConnectionActions.Margin = New Padding(2)
         pnlConnectionActions.Name = "pnlConnectionActions"
@@ -831,8 +824,8 @@ Partial Class frmMain
         ' tblConnection
         ' 
         tblConnection.ColumnCount = 2
-        tblConnection.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 96.0F))
-        tblConnection.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100.0F))
+        tblConnection.ColumnStyles.Add(New ColumnStyle(SizeType.Absolute, 96F))
+        tblConnection.ColumnStyles.Add(New ColumnStyle(SizeType.Percent, 100F))
         tblConnection.Controls.Add(lblServer, 0, 0)
         tblConnection.Controls.Add(txtServer, 1, 0)
         tblConnection.Controls.Add(lblDatabase, 0, 1)
@@ -843,17 +836,17 @@ Partial Class frmMain
         tblConnection.Controls.Add(txtPassword, 1, 3)
         tblConnection.Controls.Add(chkIntegratedSecurity, 1, 4)
         tblConnection.Dock = DockStyle.Fill
-        tblConnection.Font = New Font("Segoe UI", 9.0F)
+        tblConnection.Font = New Font("Segoe UI", 9F)
         tblConnection.Location = New Point(13, 28)
         tblConnection.Margin = New Padding(2)
         tblConnection.Name = "tblConnection"
         tblConnection.RowCount = 6
-        tblConnection.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblConnection.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblConnection.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblConnection.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblConnection.RowStyles.Add(New RowStyle(SizeType.Absolute, 32.0F))
-        tblConnection.RowStyles.Add(New RowStyle(SizeType.Percent, 100.0F))
+        tblConnection.RowStyles.Add(New RowStyle(SizeType.Absolute, 32F))
+        tblConnection.RowStyles.Add(New RowStyle(SizeType.Absolute, 32F))
+        tblConnection.RowStyles.Add(New RowStyle(SizeType.Absolute, 32F))
+        tblConnection.RowStyles.Add(New RowStyle(SizeType.Absolute, 32F))
+        tblConnection.RowStyles.Add(New RowStyle(SizeType.Absolute, 32F))
+        tblConnection.RowStyles.Add(New RowStyle(SizeType.Percent, 100F))
         tblConnection.Size = New Size(374, 237)
         tblConnection.TabIndex = 1
         ' 
@@ -911,16 +904,18 @@ Partial Class frmMain
         ' 
         ' frmMain
         ' 
-        AutoScaleDimensions = New SizeF(96.0F, 96.0F)
+        AutoScaleDimensions = New SizeF(96F, 96F)
         AutoScaleMode = AutoScaleMode.Dpi
         BackColor = Color.White
-        ClientSize = New Size(967, 672)
+        ClientSize = New Size(967, 619)
         Controls.Add(pnlMain)
         Controls.Add(statusStrip)
         Controls.Add(menuStrip)
-        Font = New Font("Segoe UI", 9.0F)
+        Font = New Font("Segoe UI", 9F)
+        FormBorderStyle = FormBorderStyle.FixedSingle
         MainMenuStrip = menuStrip
         Margin = New Padding(2)
+        MaximizeBox = False
         MinimumSize = New Size(803, 568)
         Name = "frmMain"
         StartPosition = FormStartPosition.CenterScreen
@@ -985,11 +980,10 @@ Partial Class frmMain
     Friend WithEvents grpGeneration As System.Windows.Forms.GroupBox
     Friend WithEvents pnlProgress As System.Windows.Forms.Panel
     Friend WithEvents progressBar As System.Windows.Forms.ProgressBar
-    Friend WithEvents lblProgress As System.Windows.Forms.Label
     Friend WithEvents pnlGenerationActions As System.Windows.Forms.Panel
     Friend WithEvents btnGenerate As System.Windows.Forms.Button
     Friend WithEvents btnSelectOutput As System.Windows.Forms.Button
-    Friend WithEvents btnOpenOutput As System.Windows.Forms.Button
+    Friend WithEvents btnBackupDatabase As System.Windows.Forms.Button
     Friend WithEvents txtOutput As System.Windows.Forms.TextBox
     Friend WithEvents lblOutput As System.Windows.Forms.Label
     Friend WithEvents grpOptions As System.Windows.Forms.GroupBox
@@ -1020,4 +1014,5 @@ Partial Class frmMain
     Friend WithEvents lblPassword As System.Windows.Forms.Label
     Friend WithEvents txtPassword As System.Windows.Forms.TextBox
     Friend WithEvents chkIntegratedSecurity As System.Windows.Forms.CheckBox
+    Friend WithEvents lblProgress As Label
 End Class
