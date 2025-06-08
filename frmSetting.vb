@@ -8,6 +8,7 @@ Public Class frmSetting
     ' Settings properties
     Public Property GenerateDropStatements As Boolean = False
     Public Property OverwriteExistingFiles As Boolean = True
+    Public Property OpenOutputFolderAfterOperation As Boolean = False ' New property
 
 #Region "Form Events"
 
@@ -30,6 +31,7 @@ Public Class frmSetting
         ' Set default values
         GenerateDropStatements = False
         OverwriteExistingFiles = True
+        OpenOutputFolderAfterOperation = False ' Default to false
     End Sub
 
 #End Region
@@ -44,14 +46,15 @@ Public Class frmSetting
             ' Load settings from INI file
             GenerateDropStatements = iniHelper.ReadBoolean("GenerationSettings", "GenerateDropStatements", False)
             OverwriteExistingFiles = iniHelper.ReadBoolean("GenerationSettings", "OverwriteExistingFiles", True)
+            OpenOutputFolderAfterOperation = iniHelper.ReadBoolean("GenerationSettings", "OpenOutputFolderAfterOperation", False)
 
             ' Update UI controls
             chkGenerateDropStatements.Checked = GenerateDropStatements
             chkOverwriteExistingFiles.Checked = OverwriteExistingFiles
+            chkOpenOutputFolder.Checked = OpenOutputFolderAfterOperation
 
         Catch ex As Exception
-            MessageBox.Show($"Error loading settings: {ex.Message}", "Settings Error",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            UpdateButtonStatus(btnApply, "error", "Error loading settings")
         End Try
     End Sub
 
@@ -63,17 +66,18 @@ Public Class frmSetting
             ' Get values from UI controls
             GenerateDropStatements = chkGenerateDropStatements.Checked
             OverwriteExistingFiles = chkOverwriteExistingFiles.Checked
+            OpenOutputFolderAfterOperation = chkOpenOutputFolder.Checked
 
             ' Save to INI file
             iniHelper.WriteBoolean("GenerationSettings", "GenerateDropStatements", GenerateDropStatements)
             iniHelper.WriteBoolean("GenerationSettings", "OverwriteExistingFiles", OverwriteExistingFiles)
+            iniHelper.WriteBoolean("GenerationSettings", "OpenOutputFolderAfterOperation", OpenOutputFolderAfterOperation)
 
             ' Write timestamp
             iniHelper.WriteValue("GenerationSettings", "LastUpdated", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
 
         Catch ex As Exception
-            MessageBox.Show($"Error saving settings: {ex.Message}", "Settings Error",
-                          MessageBoxButtons.OK, MessageBoxIcon.Error)
+            UpdateButtonStatus(btnApply, "error", "Error saving settings")
         End Try
     End Sub
 
@@ -83,10 +87,66 @@ Public Class frmSetting
     Private Sub ResetSettings()
         GenerateDropStatements = False
         OverwriteExistingFiles = True
+        OpenOutputFolderAfterOperation = False
 
         ' Update UI controls
         chkGenerateDropStatements.Checked = GenerateDropStatements
         chkOverwriteExistingFiles.Checked = OverwriteExistingFiles
+        chkOpenOutputFolder.Checked = OpenOutputFolderAfterOperation
+    End Sub
+
+    ''' <summary>
+    ''' Update button status with visual feedback
+    ''' </summary>
+    ''' <param name="button">Button to update</param>
+    ''' <param name="status">Status type (success, error, warning, info)</param>
+    ''' <param name="message">Status message</param>
+    ''' <param name="autoRevert">Whether to auto-revert after 3 seconds</param>
+    Private Sub UpdateButtonStatus(button As Button, status As String, message As String, Optional autoRevert As Boolean = True)
+        Dim originalText As String = button.Tag?.ToString() ' Store original text in Tag
+        If String.IsNullOrEmpty(originalText) Then
+            button.Tag = button.Text
+            originalText = button.Text
+        End If
+
+        Dim originalColor As Color = button.BackColor
+
+        Select Case status.ToLower()
+            Case "success"
+                button.BackColor = Color.FromArgb(40, 167, 69)
+                button.Text = "✓ " & message
+            Case "error"
+                button.BackColor = Color.FromArgb(220, 53, 69)
+                button.Text = "✗ " & message
+            Case "warning"
+                button.BackColor = Color.FromArgb(255, 193, 7)
+                button.ForeColor = Color.Black
+                button.Text = "⚠ " & message
+            Case "info"
+                button.BackColor = Color.FromArgb(0, 120, 215)
+                button.Text = "ℹ " & message
+            Case "loading"
+                button.BackColor = Color.FromArgb(108, 117, 125)
+                button.Text = "⏳ " & message
+        End Select
+
+        Application.DoEvents()
+
+        If autoRevert Then
+            ' Auto-revert after 3 seconds using a Timer instead of Task.Delay
+            Dim revertTimer As New Timer()
+            revertTimer.Interval = 3000 ' 3 seconds
+            AddHandler revertTimer.Tick, Sub()
+                                             revertTimer.Stop()
+                                             revertTimer.Dispose()
+                                             If Not Me.IsDisposed AndAlso Me.IsHandleCreated Then
+                                                 button.Text = originalText
+                                                 button.BackColor = originalColor
+                                                 button.ForeColor = Color.White
+                                             End If
+                                         End Sub
+            revertTimer.Start()
+        End If
     End Sub
 
 #End Region
@@ -95,8 +155,20 @@ Public Class frmSetting
 
     Private Sub btnOK_Click(sender As Object, e As EventArgs) Handles btnOK.Click
         SaveSettings()
-        Me.DialogResult = DialogResult.OK
-        Me.Close()
+        UpdateButtonStatus(btnOK, "success", "Settings saved")
+
+        ' Delay close to show status using Timer instead of Task.Delay
+        Dim closeTimer As New Timer()
+        closeTimer.Interval = 1000 ' 1 second
+        AddHandler closeTimer.Tick, Sub()
+                                        closeTimer.Stop()
+                                        closeTimer.Dispose()
+                                        If Not Me.IsDisposed AndAlso Me.IsHandleCreated Then
+                                            Me.DialogResult = DialogResult.OK
+                                            Me.Close()
+                                        End If
+                                    End Sub
+        closeTimer.Start()
     End Sub
 
     Private Sub btnCancel_Click(sender As Object, e As EventArgs) Handles btnCancel.Click
@@ -106,17 +178,56 @@ Public Class frmSetting
 
     Private Sub btnApply_Click(sender As Object, e As EventArgs) Handles btnApply.Click
         SaveSettings()
-        MessageBox.Show("Settings applied successfully!", "Settings",
-                       MessageBoxButtons.OK, MessageBoxIcon.Information)
+        UpdateButtonStatus(btnApply, "success", "Applied successfully")
     End Sub
 
     Private Sub btnReset_Click(sender As Object, e As EventArgs) Handles btnReset.Click
-        If MessageBox.Show("Reset all settings to default values?", "Reset Settings",
-                          MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-            ResetSettings()
-            MessageBox.Show("Settings reset to default values.", "Settings Reset",
-                           MessageBoxButtons.OK, MessageBoxIcon.Information)
-        End If
+        ' Create custom confirmation dialog instead of MessageBox
+        Using confirmDialog As New Form()
+            confirmDialog.Text = "Reset Settings"
+            confirmDialog.Size = New Size(400, 200)
+            confirmDialog.StartPosition = FormStartPosition.CenterParent
+            confirmDialog.FormBorderStyle = FormBorderStyle.FixedDialog
+            confirmDialog.MaximizeBox = False
+            confirmDialog.MinimizeBox = False
+            confirmDialog.ShowIcon = False
+
+            Dim lblMessage As New Label()
+            lblMessage.Text = "Reset all settings to default values?"
+            lblMessage.Font = New Font("Segoe UI", 10)
+            lblMessage.Location = New Point(20, 30)
+            lblMessage.Size = New Size(360, 50)
+            lblMessage.TextAlign = ContentAlignment.MiddleCenter
+
+            Dim btnYes As New Button()
+            btnYes.Text = "Yes"
+            btnYes.Location = New Point(220, 100)
+            btnYes.Size = New Size(75, 30)
+            btnYes.BackColor = Color.FromArgb(40, 167, 69)
+            btnYes.ForeColor = Color.White
+            btnYes.FlatStyle = FlatStyle.Flat
+            btnYes.DialogResult = DialogResult.Yes
+            AddHandler btnYes.Click, Sub() confirmDialog.Close()
+
+            Dim btnNo As New Button()
+            btnNo.Text = "No"
+            btnNo.Location = New Point(305, 100)
+            btnNo.Size = New Size(75, 30)
+            btnNo.BackColor = Color.FromArgb(108, 117, 125)
+            btnNo.ForeColor = Color.White
+            btnNo.FlatStyle = FlatStyle.Flat
+            btnNo.DialogResult = DialogResult.No
+            AddHandler btnNo.Click, Sub() confirmDialog.Close()
+
+            confirmDialog.Controls.AddRange({lblMessage, btnYes, btnNo})
+            confirmDialog.AcceptButton = btnYes
+            confirmDialog.CancelButton = btnNo
+
+            If confirmDialog.ShowDialog(Me) = DialogResult.Yes Then
+                ResetSettings()
+                UpdateButtonStatus(btnReset, "success", "Settings reset")
+            End If
+        End Using
     End Sub
 
 #End Region
@@ -131,6 +242,7 @@ Public Class frmSetting
         Dim settings As New Dictionary(Of String, Object)
         settings("GenerateDropStatements") = chkGenerateDropStatements.Checked
         settings("OverwriteExistingFiles") = chkOverwriteExistingFiles.Checked
+        settings("OpenOutputFolderAfterOperation") = chkOpenOutputFolder.Checked
         Return settings
     End Function
 
@@ -145,6 +257,10 @@ Public Class frmSetting
 
         If settings.ContainsKey("OverwriteExistingFiles") Then
             chkOverwriteExistingFiles.Checked = CBool(settings("OverwriteExistingFiles"))
+        End If
+
+        If settings.ContainsKey("OpenOutputFolderAfterOperation") Then
+            chkOpenOutputFolder.Checked = CBool(settings("OpenOutputFolderAfterOperation"))
         End If
     End Sub
 

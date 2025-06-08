@@ -25,6 +25,10 @@ Partial Class frmSetting
         Me.components = New System.ComponentModel.Container()
         Me.toolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.pnlMain = New System.Windows.Forms.Panel()
+        Me.grpUserInterface = New System.Windows.Forms.GroupBox()
+        Me.pnlUIOptions = New System.Windows.Forms.Panel()
+        Me.chkOpenOutputFolder = New System.Windows.Forms.CheckBox()
+        Me.lblOpenOutputFolderDesc = New System.Windows.Forms.Label()
         Me.grpScriptGeneration = New System.Windows.Forms.GroupBox()
         Me.pnlScriptOptions = New System.Windows.Forms.Panel()
         Me.chkGenerateDropStatements = New System.Windows.Forms.CheckBox()
@@ -43,6 +47,8 @@ Partial Class frmSetting
         Me.lblDescription = New System.Windows.Forms.Label()
         Me.picIcon = New System.Windows.Forms.PictureBox()
         Me.pnlMain.SuspendLayout()
+        Me.grpUserInterface.SuspendLayout()
+        Me.pnlUIOptions.SuspendLayout()
         Me.grpScriptGeneration.SuspendLayout()
         Me.pnlScriptOptions.SuspendLayout()
         Me.grpOutputSettings.SuspendLayout()
@@ -54,14 +60,64 @@ Partial Class frmSetting
         '
         'pnlMain
         '
+        Me.pnlMain.Controls.Add(Me.grpUserInterface)
         Me.pnlMain.Controls.Add(Me.grpScriptGeneration)
         Me.pnlMain.Controls.Add(Me.grpOutputSettings)
         Me.pnlMain.Dock = System.Windows.Forms.DockStyle.Fill
         Me.pnlMain.Location = New System.Drawing.Point(0, 80)
         Me.pnlMain.Name = "pnlMain"
         Me.pnlMain.Padding = New System.Windows.Forms.Padding(20)
-        Me.pnlMain.Size = New System.Drawing.Size(500, 280)
+        Me.pnlMain.Size = New System.Drawing.Size(500, 380)
         Me.pnlMain.TabIndex = 1
+        '
+        'grpUserInterface
+        '
+        Me.grpUserInterface.Controls.Add(Me.pnlUIOptions)
+        Me.grpUserInterface.Dock = System.Windows.Forms.DockStyle.Top
+        Me.grpUserInterface.Font = New System.Drawing.Font("Segoe UI", 10.0!, System.Drawing.FontStyle.Bold)
+        Me.grpUserInterface.ForeColor = System.Drawing.Color.FromArgb(CType(CType(64, Byte), Integer), CType(CType(64, Byte), Integer), CType(CType(64, Byte), Integer))
+        Me.grpUserInterface.Location = New System.Drawing.Point(20, 220)
+        Me.grpUserInterface.Name = "grpUserInterface"
+        Me.grpUserInterface.Padding = New System.Windows.Forms.Padding(15, 10, 15, 15)
+        Me.grpUserInterface.Size = New System.Drawing.Size(460, 100)
+        Me.grpUserInterface.TabIndex = 2
+        Me.grpUserInterface.TabStop = False
+        Me.grpUserInterface.Text = "🖥️ User Interface Options"
+        '
+        'pnlUIOptions
+        '
+        Me.pnlUIOptions.Controls.Add(Me.chkOpenOutputFolder)
+        Me.pnlUIOptions.Controls.Add(Me.lblOpenOutputFolderDesc)
+        Me.pnlUIOptions.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.pnlUIOptions.Font = New System.Drawing.Font("Segoe UI", 9.0!)
+        Me.pnlUIOptions.Location = New System.Drawing.Point(15, 28)
+        Me.pnlUIOptions.Name = "pnlUIOptions"
+        Me.pnlUIOptions.Size = New System.Drawing.Size(430, 57)
+        Me.pnlUIOptions.TabIndex = 0
+        '
+        'chkOpenOutputFolder
+        '
+        Me.chkOpenOutputFolder.AutoSize = True
+        Me.chkOpenOutputFolder.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Bold)
+        Me.chkOpenOutputFolder.ForeColor = System.Drawing.Color.FromArgb(CType(CType(255, Byte), Integer), CType(CType(193, Byte), Integer), CType(CType(7, Byte), Integer))
+        Me.chkOpenOutputFolder.Location = New System.Drawing.Point(10, 10)
+        Me.chkOpenOutputFolder.Name = "chkOpenOutputFolder"
+        Me.chkOpenOutputFolder.Size = New System.Drawing.Size(300, 19)
+        Me.chkOpenOutputFolder.TabIndex = 0
+        Me.chkOpenOutputFolder.Text = "📂 Open output folder after successful operations"
+        Me.toolTip.SetToolTip(Me.chkOpenOutputFolder, "When checked, automatically opens the output folder in Windows Explorer after successful script generation or database backup")
+        Me.chkOpenOutputFolder.UseVisualStyleBackColor = True
+        '
+        'lblOpenOutputFolderDesc
+        '
+        Me.lblOpenOutputFolderDesc.AutoSize = True
+        Me.lblOpenOutputFolderDesc.Font = New System.Drawing.Font("Segoe UI", 8.0!, System.Drawing.FontStyle.Italic)
+        Me.lblOpenOutputFolderDesc.ForeColor = System.Drawing.Color.FromArgb(CType(CType(108, Byte), Integer), CType(CType(117, Byte), Integer), CType(CType(125, Byte), Integer))
+        Me.lblOpenOutputFolderDesc.Location = New System.Drawing.Point(25, 32)
+        Me.lblOpenOutputFolderDesc.Name = "lblOpenOutputFolderDesc"
+        Me.lblOpenOutputFolderDesc.Size = New System.Drawing.Size(350, 13)
+        Me.lblOpenOutputFolderDesc.TabIndex = 1
+        Me.lblOpenOutputFolderDesc.Text = "Automatically opens Windows Explorer to show generated files"
         '
         'grpScriptGeneration
         '
@@ -168,7 +224,7 @@ Partial Class frmSetting
         Me.pnlButtons.Controls.Add(Me.btnApply)
         Me.pnlButtons.Controls.Add(Me.btnReset)
         Me.pnlButtons.Dock = System.Windows.Forms.DockStyle.Bottom
-        Me.pnlButtons.Location = New System.Drawing.Point(0, 360)
+        Me.pnlButtons.Location = New System.Drawing.Point(0, 460)
         Me.pnlButtons.Name = "pnlButtons"
         Me.pnlButtons.Padding = New System.Windows.Forms.Padding(20, 10, 20, 20)
         Me.pnlButtons.Size = New System.Drawing.Size(500, 60)
@@ -271,9 +327,9 @@ Partial Class frmSetting
         Me.lblDescription.ForeColor = System.Drawing.Color.FromArgb(CType(CType(108, Byte), Integer), CType(CType(117, Byte), Integer), CType(CType(125, Byte), Integer))
         Me.lblDescription.Location = New System.Drawing.Point(60, 40)
         Me.lblDescription.Name = "lblDescription"
-        Me.lblDescription.Size = New System.Drawing.Size(280, 15)
+        Me.lblDescription.Size = New System.Drawing.Size(350, 15)
         Me.lblDescription.TabIndex = 2
-        Me.lblDescription.Text = "Configure script generation and output file options"
+        Me.lblDescription.Text = "Configure script generation, output files, and user interface options"
         '
         'picIcon
         '
@@ -291,7 +347,7 @@ Partial Class frmSetting
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.Color.FromArgb(CType(CType(248, Byte), Integer), CType(CType(249, Byte), Integer), CType(CType(250, Byte), Integer))
         Me.CancelButton = Me.btnCancel
-        Me.ClientSize = New System.Drawing.Size(500, 420)
+        Me.ClientSize = New System.Drawing.Size(500, 520)
         Me.Controls.Add(Me.pnlMain)
         Me.Controls.Add(Me.pnlButtons)
         Me.Controls.Add(Me.pnlHeader)
@@ -305,6 +361,9 @@ Partial Class frmSetting
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
         Me.Text = "RepoSQL Settings"
         Me.pnlMain.ResumeLayout(False)
+        Me.grpUserInterface.ResumeLayout(False)
+        Me.pnlUIOptions.ResumeLayout(False)
+        Me.pnlUIOptions.PerformLayout()
         Me.grpScriptGeneration.ResumeLayout(False)
         Me.pnlScriptOptions.ResumeLayout(False)
         Me.pnlScriptOptions.PerformLayout()
@@ -321,6 +380,10 @@ Partial Class frmSetting
 
     Friend WithEvents toolTip As System.Windows.Forms.ToolTip
     Friend WithEvents pnlMain As System.Windows.Forms.Panel
+    Friend WithEvents grpUserInterface As System.Windows.Forms.GroupBox
+    Friend WithEvents pnlUIOptions As System.Windows.Forms.Panel
+    Friend WithEvents chkOpenOutputFolder As System.Windows.Forms.CheckBox
+    Friend WithEvents lblOpenOutputFolderDesc As System.Windows.Forms.Label
     Friend WithEvents grpScriptGeneration As System.Windows.Forms.GroupBox
     Friend WithEvents pnlScriptOptions As System.Windows.Forms.Panel
     Friend WithEvents chkGenerateDropStatements As System.Windows.Forms.CheckBox

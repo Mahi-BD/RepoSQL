@@ -85,25 +85,28 @@ Public Class frmMain
 #Region "Settings Integration"
 
     ''' <summary>
-    ''' Load generation settings from INI file
+    ''' Load generation settings from INI file - Updated to include new setting
     ''' </summary>
     Private Sub LoadGenerationSettings()
         Try
             ' Load generation settings that affect script creation
             Dim generateDropStatements As Boolean = iniHelper.ReadBoolean("GenerationSettings", "GenerateDropStatements", False)
             Dim overwriteExistingFiles As Boolean = iniHelper.ReadBoolean("GenerationSettings", "OverwriteExistingFiles", True)
+            Dim openOutputFolderAfterOperation As Boolean = iniHelper.ReadBoolean("GenerationSettings", "OpenOutputFolderAfterOperation", False)
 
             ' Store settings for use during generation
             Me.Tag = New Dictionary(Of String, Object) From {
                 {"GenerateDropStatements", generateDropStatements},
-                {"OverwriteExistingFiles", overwriteExistingFiles}
+                {"OverwriteExistingFiles", overwriteExistingFiles},
+                {"OpenOutputFolderAfterOperation", openOutputFolderAfterOperation}
             }
 
         Catch ex As Exception
             ' Use default settings if error loading
             Me.Tag = New Dictionary(Of String, Object) From {
                 {"GenerateDropStatements", False},
-                {"OverwriteExistingFiles", True}
+                {"OverwriteExistingFiles", True},
+                {"OpenOutputFolderAfterOperation", False}
             }
         End Try
     End Sub
@@ -162,8 +165,7 @@ Public Class frmMain
             UpdateStatus("Configuration loaded from sconfig.ini")
 
         Catch ex As Exception
-            MessageBox.Show($"Error loading configuration: {ex.Message}", "Configuration Error",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            UpdateStatus($"Error loading configuration: {ex.Message}")
         Finally
             isLoadingConfig = False
         End Try
@@ -204,8 +206,7 @@ Public Class frmMain
             iniHelper.WriteValue("General", "Version", "2.0")
 
         Catch ex As Exception
-            MessageBox.Show($"Error saving configuration: {ex.Message}", "Configuration Error",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            UpdateStatus($"Error saving configuration: {ex.Message}")
         End Try
     End Sub
 
@@ -331,6 +332,74 @@ Public Class frmMain
         btnGenerate.Enabled = isConnected AndAlso checkedCount > 0
     End Sub
 
+    ''' <summary>
+    ''' Update button status with visual feedback
+    ''' </summary>
+    ''' <param name="button">Button to update</param>
+    ''' <param name="status">Status type (success, error, warning, info)</param>
+    ''' <param name="message">Status message</param>
+    ''' <param name="autoRevert">Whether to auto-revert after 3 seconds</param>
+    Private Sub UpdateButtonStatus(button As Button, status As String, message As String, Optional autoRevert As Boolean = True)
+        ' Store original values in the button's Tag as a Dictionary
+        Dim originalValues As Dictionary(Of String, Object) = TryCast(button.Tag, Dictionary(Of String, Object))
+        If originalValues Is Nothing Then
+            originalValues = New Dictionary(Of String, Object) From {
+                {"Text", button.Text},
+                {"BackColor", button.BackColor},
+                {"ForeColor", button.ForeColor}
+            }
+            button.Tag = originalValues
+        End If
+
+        Dim originalText As String = originalValues("Text").ToString()
+        Dim originalBackColor As Color = CType(originalValues("BackColor"), Color)
+        Dim originalForeColor As Color = CType(originalValues("ForeColor"), Color)
+
+        Select Case status.ToLower()
+            Case "success"
+                button.BackColor = Color.FromArgb(40, 167, 69)
+                button.ForeColor = Color.White
+                button.Text = "✓ " & message
+            Case "error"
+                button.BackColor = Color.FromArgb(220, 53, 69)
+                button.ForeColor = Color.White
+                button.Text = "✗ " & message
+            Case "warning"
+                button.BackColor = Color.FromArgb(255, 193, 7)
+                button.ForeColor = Color.Black
+                button.Text = "⚠ " & message
+            Case "info"
+                button.BackColor = Color.FromArgb(0, 120, 215)
+                button.ForeColor = Color.White
+                button.Text = "ℹ " & message
+            Case "loading"
+                button.BackColor = Color.FromArgb(108, 117, 125)
+                button.ForeColor = Color.White
+                button.Text = "⏳ " & message
+        End Select
+
+        Application.DoEvents()
+
+        If autoRevert Then
+            ' Auto-revert after 3 seconds using a Timer instead of Task.Delay
+            Dim revertTimer As New Timer()
+            revertTimer.Interval = 3000 ' 3 seconds
+            AddHandler revertTimer.Tick, Sub()
+                                             revertTimer.Stop()
+                                             revertTimer.Dispose()
+                                             If Not Me.IsDisposed AndAlso Me.IsHandleCreated AndAlso Not button.IsDisposed Then
+                                                 button.Text = originalText
+                                                 button.BackColor = originalBackColor
+                                                 button.ForeColor = originalForeColor
+                                             End If
+                                         End Sub
+            revertTimer.Start()
+        End If
+
+        ' Also update the main status
+        UpdateStatus(message)
+    End Sub
+
 #End Region
 
 #Region "Connection Management"
@@ -360,20 +429,18 @@ Public Class frmMain
         Dim databaseName As String = txtDatabase.Text.Trim()
 
         If String.IsNullOrEmpty(serverName) OrElse String.IsNullOrEmpty(databaseName) Then
-            MessageBox.Show("Please enter server and database information.", "Missing Information",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            UpdateButtonStatus(btnTestConnection, "warning", "Missing server/database info")
             Exit Sub
         End If
 
         If Not chkIntegratedSecurity.Checked AndAlso
            (String.IsNullOrEmpty(txtUsername.Text.Trim()) OrElse String.IsNullOrEmpty(txtPassword.Text.Trim())) Then
-            MessageBox.Show("Please enter username and password for SQL authentication.", "Missing Credentials",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            UpdateButtonStatus(btnTestConnection, "warning", "Missing credentials")
             Exit Sub
         End If
 
         btnTestConnection.Enabled = False
-        UpdateStatus("Testing connection...")
+        UpdateButtonStatus(btnTestConnection, "loading", "Testing...", False)
         UpdateConnectionStatus(False, "Connecting...")
 
         Try
@@ -382,15 +449,11 @@ Public Class frmMain
             Using connection As New SqlConnection(connectionString)
                 Await connection.OpenAsync()
                 UpdateConnectionStatus(True, $"Connected to {databaseName}")
-                UpdateStatus("Connection successful!")
-                MessageBox.Show("Database connection successful!", "Success",
-                              MessageBoxButtons.OK, MessageBoxIcon.Information)
+                UpdateButtonStatus(btnTestConnection, "success", "Connected!")
             End Using
         Catch ex As Exception
             UpdateConnectionStatus(False, "Connection failed")
-            UpdateStatus("Connection failed.")
-            MessageBox.Show($"Connection failed: {ex.Message}", "Connection Error",
-                          MessageBoxButtons.OK, MessageBoxIcon.Error)
+            UpdateButtonStatus(btnTestConnection, "error", "Failed")
         Finally
             btnTestConnection.Enabled = True
         End Try
@@ -423,13 +486,12 @@ Public Class frmMain
 
     Private Async Sub LoadTables()
         If Not isConnected Then
-            MessageBox.Show("Please test the connection first.", "Not Connected",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            UpdateButtonStatus(btnLoadTables, "warning", "Not connected")
             Exit Sub
         End If
 
         btnLoadTables.Enabled = False
-        UpdateStatus("Loading tables...")
+        UpdateButtonStatus(btnLoadTables, "loading", "Loading...", False)
 
         Try
             connectionString = BuildConnectionString()
@@ -464,12 +526,10 @@ Public Class frmMain
 
             ' Save updated configuration
             SaveIniConfig()
-            UpdateStatus($"Loaded {allTables.Count} tables successfully.")
+            UpdateButtonStatus(btnLoadTables, "success", $"Loaded {allTables.Count}")
 
         Catch ex As Exception
-            UpdateStatus("Error loading tables.")
-            MessageBox.Show($"Error loading tables: {ex.Message}", "Error",
-                          MessageBoxButtons.OK, MessageBoxIcon.Error)
+            UpdateButtonStatus(btnLoadTables, "error", "Load failed")
         Finally
             btnLoadTables.Enabled = True
         End Try
@@ -575,6 +635,7 @@ Public Class frmMain
                 txtOutput.Text = folderDialog.SelectedPath
                 btnBackupDatabase.Enabled = isConnected
                 SaveIniConfig()
+                UpdateButtonStatus(btnSelectOutput, "success", "Folder set")
             End If
         End Using
     End Sub
@@ -677,76 +738,34 @@ Public Class frmMain
     End Sub
 
     ''' <summary>
-    ''' Create database backup using the enhanced DatabaseBackupManager class
+    ''' Create database backup using the enhanced DatabaseBackupManager class - Updated to respect settings
     ''' </summary>
     Private Async Sub BackupDatabaseAndZipEnhanced()
         ' Validate connection
         If Not isConnected Then
-            MessageBox.Show("Please test the database connection first.", "Not Connected",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            UpdateButtonStatus(btnBackupDatabase, "warning", "Not connected")
             Exit Sub
         End If
 
         ' Validate output directory
         If String.IsNullOrEmpty(txtOutput.Text) OrElse Not Directory.Exists(txtOutput.Text) Then
-            MessageBox.Show("Please select a valid output directory first.", "Invalid Output Directory",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            UpdateButtonStatus(btnBackupDatabase, "warning", "Invalid output directory")
             Exit Sub
         End If
 
         ' Check if we're running with sufficient privileges
         Dim privilegeWarning As String = CheckBackupPrivileges()
         If Not String.IsNullOrEmpty(privilegeWarning) Then
-            Dim result As DialogResult = MessageBox.Show(
-                privilegeWarning & vbCrLf & vbCrLf & "Do you want to continue anyway?",
-                "Privilege Warning",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning)
-
-            If result <> DialogResult.Yes Then
-                Exit Sub
-            End If
+            UpdateButtonStatus(btnBackupDatabase, "warning", "Privilege warning - continuing anyway")
         End If
 
         ' Get database size estimate for user confirmation
         Try
             Dim dbSize As Double = Await GetDatabaseSizeAsync()
             Dim sizeMessage As String = If(dbSize > 0, $" (Current size: ~{dbSize:F1} MB)", "")
-
-            ' Enhanced confirmation dialog with more information
-            Dim confirmationMessage As String =
-                $"Database Backup Confirmation" & vbCrLf & vbCrLf &
-                $"Database: {txtDatabase.Text}{sizeMessage}" & vbCrLf &
-                $"Output Location: {txtOutput.Text}" & vbCrLf & vbCrLf &
-                "The backup process will:" & vbCrLf &
-                "• Create a full database backup" & vbCrLf &
-                "• Compress it to a ZIP file with timestamp" & vbCrLf &
-                "• Use SQL Server's optimal backup location" & vbCrLf &
-                "• Clean up temporary files automatically" & vbCrLf & vbCrLf &
-                "This operation may take several minutes depending on database size." & vbCrLf & vbCrLf &
-                "Continue with backup?"
-
-            Dim result As DialogResult = MessageBox.Show(confirmationMessage,
-                "Confirm Database Backup",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question)
-
-            If result <> DialogResult.Yes Then
-                Exit Sub
-            End If
+            UpdateStatus($"Starting backup for {txtDatabase.Text}{sizeMessage}")
         Catch ex As Exception
             ' Continue without size info if we can't get it
-            Dim result As DialogResult = MessageBox.Show(
-                $"Create backup of database '{txtDatabase.Text}'?" & vbCrLf & vbCrLf &
-                "This operation may take several minutes depending on database size." & vbCrLf & vbCrLf &
-                "Continue?",
-                "Confirm Database Backup",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question)
-
-            If result <> DialogResult.Yes Then
-                Exit Sub
-            End If
         End Try
 
         ' Initialize enhanced backup manager
@@ -776,7 +795,7 @@ Public Class frmMain
         toolStripProgressBar.Value = 0
 
         Try
-            UpdateStatus("Initializing enhanced database backup...")
+            UpdateButtonStatus(btnBackupDatabase, "loading", "Backing up...", False)
             lblProgress.Text = "Determining optimal backup strategy..."
 
             ' Perform the backup with enhanced error handling
@@ -788,30 +807,26 @@ Public Class frmMain
                 progressBar.Value = progressBar.Maximum
                 toolStripProgressBar.Value = toolStripProgressBar.Maximum
 
-                ' Show detailed success message
-                Dim successMessage As String = BuildSuccessMessage(backupResult)
+                ' Show success status
+                UpdateButtonStatus(btnBackupDatabase, "success", $"Backup done")
+                UpdateStatus($"Database backup completed: {backupResult.FileName}")
 
-                Dim openFolderResult As DialogResult = MessageBox.Show(successMessage,
-                                                                      "Backup Completed Successfully",
-                                                                      MessageBoxButtons.YesNo,
-                                                                      MessageBoxIcon.Information)
-
-                If openFolderResult = DialogResult.Yes Then
+                ' Open folder based on settings - UPDATED LOGIC
+                Dim shouldOpenFolder As Boolean = CBool(settings("OpenOutputFolderAfterOperation"))
+                If shouldOpenFolder Then
                     OpenOutputFolder()
                 End If
 
-                UpdateStatus($"Database backup completed: {backupResult.FileName}")
-
             Else
-                ' Show enhanced error message with troubleshooting tips
-                ShowEnhancedErrorDialog(backupResult.ErrorMessage)
+                ' Show error status
+                UpdateButtonStatus(btnBackupDatabase, "error", "Backup failed")
                 UpdateStatus("Database backup failed.")
             End If
 
         Catch ex As Exception
-            ' Handle unexpected errors with guidance
+            ' Handle unexpected errors
+            UpdateButtonStatus(btnBackupDatabase, "error", "Backup failed")
             UpdateStatus("Database backup failed.")
-            ShowEnhancedErrorDialog($"Unexpected error during backup: {ex.Message}")
         Finally
             ' Clean up event handlers
             RemoveHandler backupManager.ProgressUpdated, AddressOf OnBackupProgressUpdated
@@ -827,33 +842,18 @@ Public Class frmMain
     End Sub
 
     ''' <summary>
-    ''' Alternative backup method using SQLCMD - works around permission issues
+    ''' Alternative backup method using SQLCMD - Updated to respect settings
     ''' </summary>
     Private Async Sub BackupDatabaseUsingSqlCmd()
         ' Validate connection
         If Not isConnected Then
-            MessageBox.Show("Please test the database connection first.", "Not Connected",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            UpdateButtonStatus(btnBackupDatabase, "warning", "Not connected")
             Exit Sub
         End If
 
         ' Validate output directory
         If String.IsNullOrEmpty(txtOutput.Text) OrElse Not Directory.Exists(txtOutput.Text) Then
-            MessageBox.Show("Please select a valid output directory first.", "Invalid Output Directory",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Exit Sub
-        End If
-
-        ' Confirm backup operation
-        Dim result As DialogResult = MessageBox.Show(
-            $"Create backup of database '{txtDatabase.Text}' using SQLCMD method?" & vbCrLf & vbCrLf &
-            "This method uses SQLCMD and may work better with permission issues." & vbCrLf & vbCrLf &
-            "Continue?",
-            "Alternative Database Backup",
-            MessageBoxButtons.YesNo,
-            MessageBoxIcon.Question)
-
-        If result <> DialogResult.Yes Then
+            UpdateButtonStatus(btnBackupDatabase, "warning", "Invalid output directory")
             Exit Sub
         End If
 
@@ -865,7 +865,7 @@ Public Class frmMain
         toolStripProgressBar.Style = ProgressBarStyle.Marquee
 
         Try
-            UpdateStatus("Creating backup using SQLCMD method...")
+            UpdateButtonStatus(btnBackupDatabase, "loading", "Creating SQLCMD backup...", False)
             lblProgress.Text = "Preparing backup command..."
 
             ' Create timestamp and file names
@@ -955,36 +955,20 @@ Public Class frmMain
             ' Clean up backup file
             File.Delete(backupPath)
 
-            ' Show success message
-            Dim successMessage As String =
-                $"✅ Database backup completed successfully using SQLCMD method!" & vbCrLf & vbCrLf &
-                $"Database: {txtDatabase.Text}" & vbCrLf &
-                $"Original Size: {backupSizeMB:F2} MB" & vbCrLf &
-                $"Compressed Size: {compressedSizeMB:F2} MB" & vbCrLf &
-                $"Compression: {compressionRatio:F1}% size reduction" & vbCrLf & vbCrLf &
-                $"File: {zipFileName}" & vbCrLf & vbCrLf &
-                "Would you like to open the output folder?"
+            ' Show success
+            UpdateButtonStatus(btnBackupDatabase, "success", $"SQLCMD backup completed: {zipFileName}")
+            UpdateStatus($"SQLCMD backup completed: {zipFileName}")
 
-            Dim openFolderResult As DialogResult = MessageBox.Show(successMessage,
-                                                                  "Backup Complete",
-                                                                  MessageBoxButtons.YesNo,
-                                                                  MessageBoxIcon.Information)
-
-            If openFolderResult = DialogResult.Yes Then
+            ' Open folder based on settings - UPDATED LOGIC
+            Dim settings As Dictionary(Of String, Object) = GetGenerationSettings()
+            Dim shouldOpenFolder As Boolean = CBool(settings("OpenOutputFolderAfterOperation"))
+            If shouldOpenFolder Then
                 OpenOutputFolder()
             End If
 
-            UpdateStatus($"SQLCMD backup completed: {zipFileName}")
-
         Catch ex As Exception
+            UpdateButtonStatus(btnBackupDatabase, "error", "SQLCMD backup failed")
             UpdateStatus("SQLCMD backup failed.")
-            MessageBox.Show($"SQLCMD backup method failed:" & vbCrLf & vbCrLf & ex.Message & vbCrLf & vbCrLf &
-                           "Try these solutions:" & vbCrLf &
-                           "1. Run this application as Administrator" & vbCrLf &
-                           "2. Ensure SQLCMD is installed and in PATH" & vbCrLf &
-                           "3. Use SQL Server Management Studio to create the backup manually" & vbCrLf &
-                           "4. Ask your database administrator for help",
-                           "Backup Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Finally
             SetControlsEnabled(True)
             pnlProgress.Visible = False
@@ -1016,112 +1000,6 @@ Public Class frmMain
 
         Return String.Empty
     End Function
-
-    ''' <summary>
-    ''' Build detailed success message for backup completion
-    ''' </summary>
-    Private Function BuildSuccessMessage(backupResult As DatabaseBackupManager.BackupResult) As String
-        Dim message As New StringBuilder()
-
-        message.AppendLine("✅ Database backup completed successfully!")
-        message.AppendLine()
-        message.AppendLine("📋 Backup Details:")
-        message.AppendLine($"   Database: {txtDatabase.Text}")
-        message.AppendLine($"   Original Size: {backupResult.BackupSizeMB:F2} MB")
-        message.AppendLine($"   Compressed Size: {backupResult.CompressedSizeMB:F2} MB")
-        message.AppendLine($"   Compression Ratio: {backupResult.CompressionRatio:F1}% size reduction")
-        message.AppendLine($"   Time Taken: {backupResult.TimeTaken.ToString("mm\:ss")} (mm:ss)")
-        message.AppendLine()
-        message.AppendLine("📁 Files Created:")
-        message.AppendLine($"   ZIP File: {backupResult.FileName}")
-        message.AppendLine($"   Location: {Path.GetDirectoryName(backupResult.FinalFilePath)}")
-
-        If Not String.IsNullOrEmpty(backupResult.BackupDirectory) Then
-            message.AppendLine($"   Backup Directory Used: {backupResult.BackupDirectory}")
-        End If
-
-        message.AppendLine()
-        message.AppendLine("🎉 Your database backup is ready!")
-        message.AppendLine()
-        message.AppendLine("Would you like to open the output folder?")
-
-        Return message.ToString()
-    End Function
-
-    ''' <summary>
-    ''' Show enhanced error dialog with troubleshooting guidance
-    ''' </summary>
-    Private Sub ShowEnhancedErrorDialog(errorMessage As String)
-        Dim enhancedMessage As New StringBuilder()
-
-        enhancedMessage.AppendLine("❌ Database Backup Failed")
-        enhancedMessage.AppendLine()
-        enhancedMessage.AppendLine("Error Details:")
-        enhancedMessage.AppendLine(errorMessage)
-        enhancedMessage.AppendLine()
-        enhancedMessage.AppendLine("🔧 Troubleshooting Steps:")
-        enhancedMessage.AppendLine()
-        enhancedMessage.AppendLine("1. Permission Issues:")
-        enhancedMessage.AppendLine("   • Run this application as Administrator")
-        enhancedMessage.AppendLine("   • Ensure SQL Server service has write permissions")
-        enhancedMessage.AppendLine("   • Check that the output directory is accessible")
-        enhancedMessage.AppendLine()
-        enhancedMessage.AppendLine("2. SQL Server Issues:")
-        enhancedMessage.AppendLine("   • Verify SQL Server is running and accessible")
-        enhancedMessage.AppendLine("   • Check database connection settings")
-        enhancedMessage.AppendLine("   • Ensure sufficient disk space is available")
-        enhancedMessage.AppendLine()
-        enhancedMessage.AppendLine("3. Alternative Solutions:")
-        enhancedMessage.AppendLine("   • Try the SQLCMD backup method")
-        enhancedMessage.AppendLine("   • Use SQL Server Management Studio")
-        enhancedMessage.AppendLine("   • Use a different output directory")
-        enhancedMessage.AppendLine("   • Contact your database administrator")
-
-        ' Create custom error dialog
-        Using errorForm As New Form()
-            errorForm.Text = "Database Backup Error"
-            errorForm.Size = New Size(600, 500)
-            errorForm.StartPosition = FormStartPosition.CenterParent
-            errorForm.FormBorderStyle = FormBorderStyle.FixedDialog
-            errorForm.MaximizeBox = False
-            errorForm.MinimizeBox = False
-            errorForm.ShowIcon = False
-
-            Dim textBox As New TextBox()
-            textBox.Multiline = True
-            textBox.ScrollBars = ScrollBars.Vertical
-            textBox.ReadOnly = True
-            textBox.Text = enhancedMessage.ToString()
-            textBox.Font = New Font("Consolas", 9)
-            textBox.Dock = DockStyle.Fill
-            textBox.BackColor = Color.White
-            textBox.Margin = New Padding(10)
-
-            Dim panel As New Panel()
-            panel.Dock = DockStyle.Fill
-            panel.Padding = New Padding(10)
-            panel.Controls.Add(textBox)
-
-            Dim buttonPanel As New Panel()
-            buttonPanel.Dock = DockStyle.Bottom
-            buttonPanel.Height = 50
-            buttonPanel.Padding = New Padding(10)
-
-            Dim okButton As New Button()
-            okButton.Text = "OK"
-            okButton.DialogResult = DialogResult.OK
-            okButton.Anchor = AnchorStyles.Bottom Or AnchorStyles.Right
-            okButton.Location = New Point(buttonPanel.Width - 90, 15)
-            okButton.Size = New Size(75, 25)
-
-            buttonPanel.Controls.Add(okButton)
-            errorForm.Controls.Add(panel)
-            errorForm.Controls.Add(buttonPanel)
-            errorForm.AcceptButton = okButton
-
-            errorForm.ShowDialog(Me)
-        End Using
-    End Sub
 
     ''' <summary>
     ''' Handle backup progress updates with enhanced feedback
@@ -1197,26 +1075,23 @@ Public Class frmMain
     End Function
 
     ''' <summary>
-    ''' Open the output folder in Windows Explorer with error handling
+    ''' Open the output folder in Windows Explorer with error handling - Updated with better error handling
     ''' </summary>
     Private Sub OpenOutputFolder()
-        If Directory.Exists(txtOutput.Text) Then
-            Try
+        Try
+            If Directory.Exists(txtOutput.Text) Then
                 Process.Start(New ProcessStartInfo() With {
                     .FileName = "explorer.exe",
                     .Arguments = txtOutput.Text,
                     .UseShellExecute = True
                 })
-            Catch ex As Exception
-                MessageBox.Show($"Could not open folder: {ex.Message}" & vbCrLf & vbCrLf &
-                              $"Please navigate manually to: {txtOutput.Text}",
-                              "Cannot Open Folder",
-                              MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            End Try
-        Else
-            MessageBox.Show("Output folder does not exist.", "Folder Not Found",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning)
-        End If
+                UpdateStatus($"Opened output folder: {txtOutput.Text}")
+            Else
+                UpdateStatus("Output folder does not exist.")
+            End If
+        Catch ex As Exception
+            UpdateStatus($"Could not open folder: {ex.Message}")
+        End Try
     End Sub
 
 #End Region
@@ -1229,20 +1104,17 @@ Public Class frmMain
 
     Private Async Sub GenerateSqlScripts()
         If Not isConnected Then
-            MessageBox.Show("Please test the connection first.", "Not Connected",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            UpdateButtonStatus(btnGenerate, "warning", "Not connected")
             Exit Sub
         End If
 
         If selectedTables.Count = 0 Then
-            MessageBox.Show("Please select at least one table.", "No Tables Selected",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            UpdateButtonStatus(btnGenerate, "warning", "No tables selected")
             Exit Sub
         End If
 
         If String.IsNullOrEmpty(txtOutput.Text) Then
-            MessageBox.Show("Please select an output folder.", "No Output Folder",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            UpdateButtonStatus(btnGenerate, "warning", "No output folder")
             Exit Sub
         End If
 
@@ -1252,8 +1124,7 @@ Public Class frmMain
                 Directory.CreateDirectory(txtOutput.Text)
             End If
         Catch ex As Exception
-            MessageBox.Show($"Error creating output directory: {ex.Message}", "Error",
-                          MessageBoxButtons.OK, MessageBoxIcon.Error)
+            UpdateButtonStatus(btnGenerate, "error", "Cannot create output directory")
             Exit Sub
         End Try
 
@@ -1265,7 +1136,7 @@ Public Class frmMain
         toolStripProgressBar.Value = 0
 
         Try
-            UpdateStatus("Generating SQL scripts...")
+            UpdateButtonStatus(btnGenerate, "loading", "Generating...", False)
             lblProgress.Text = "Initializing script generation..."
 
             connectionString = BuildConnectionString()
@@ -1275,23 +1146,19 @@ Public Class frmMain
             progressBar.Value = progressBar.Maximum
             toolStripProgressBar.Value = toolStripProgressBar.Maximum
 
-            Dim message As String = "SQL scripts generated successfully!" & vbCrLf & vbCrLf &
-                                  "Generated files:" & vbCrLf &
-                                  String.Join(vbCrLf, outputFiles.Select(Function(f) "• " & Path.GetFileName(f)))
+            UpdateButtonStatus(btnGenerate, "success", $"Generated {outputFiles.Count} files")
+            UpdateStatus("Generation completed successfully.")
 
-            Dim result As DialogResult = MessageBox.Show(message & vbCrLf & vbCrLf & "Would you like to open the output folder?",
-                                                       "Generation Complete", MessageBoxButtons.YesNo, MessageBoxIcon.Information)
-
-            If result = DialogResult.Yes Then
+            ' Open folder based on settings - UPDATED LOGIC
+            Dim settings As Dictionary(Of String, Object) = GetGenerationSettings()
+            Dim shouldOpenFolder As Boolean = CBool(settings("OpenOutputFolderAfterOperation"))
+            If shouldOpenFolder Then
                 OpenOutputFolder()
             End If
 
-            UpdateStatus("Generation completed successfully.")
-
         Catch ex As Exception
+            UpdateButtonStatus(btnGenerate, "error", "Generation failed")
             UpdateStatus("Generation failed.")
-            MessageBox.Show($"Error generating scripts: {ex.Message}", "Generation Error",
-                          MessageBoxButtons.OK, MessageBoxIcon.Error)
         Finally
             SetControlsEnabled(True)
             pnlProgress.Visible = False
@@ -1471,15 +1338,9 @@ Public Class frmMain
 
             ' Check if file exists and handle overwrite setting
             If File.Exists(filePath) AndAlso Not overwriteExistingFiles Then
-                Dim result As DialogResult = MessageBox.Show(
-                    $"File '{Path.GetFileName(filePath)}' already exists. Do you want to overwrite it?",
-                    "File Exists",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question)
-
-                If result <> DialogResult.Yes Then
-                    Return False
-                End If
+                ' Instead of showing MessageBox, use status update
+                UpdateStatus($"File '{Path.GetFileName(filePath)}' already exists - skipping")
+                Return False
             End If
 
             ' Write the file
@@ -1487,8 +1348,7 @@ Public Class frmMain
             Return True
 
         Catch ex As Exception
-            MessageBox.Show($"Error writing file '{Path.GetFileName(filePath)}': {ex.Message}",
-                          "File Write Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            UpdateStatus($"Error writing file '{Path.GetFileName(filePath)}': {ex.Message}")
             Return False
         End Try
     End Function
@@ -2111,10 +1971,8 @@ Public Class frmMain
 #Region "Menu Event Handlers"
 
     Private Sub newProfileToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles newProfileToolStripMenuItem.Click
-        If MessageBox.Show("Create a new profile? This will clear current settings.", "New Profile",
-                          MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-            LoadIniConfig() ' This will load defaults
-        End If
+        LoadIniConfig() ' This will load defaults
+        UpdateStatus("New profile created with default settings")
     End Sub
 
     Private Sub loadProfileToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles loadProfileToolStripMenuItem.Click
@@ -2127,11 +1985,9 @@ Public Class frmMain
                     File.Copy(openDialog.FileName, iniFilePath, True)
                     LoadIniConfig()
                     LoadGenerationSettings() ' Reload generation settings too
-                    MessageBox.Show("Profile loaded successfully!", "Success",
-                                  MessageBoxButtons.OK, MessageBoxIcon.Information)
+                    UpdateStatus("Profile loaded successfully")
                 Catch ex As Exception
-                    MessageBox.Show($"Error loading profile: {ex.Message}", "Error",
-                                  MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    UpdateStatus($"Error loading profile: {ex.Message}")
                 End Try
             End If
         End Using
@@ -2151,11 +2007,9 @@ Public Class frmMain
             If saveDialog.ShowDialog() = DialogResult.OK Then
                 Try
                     File.Copy(iniFilePath, saveDialog.FileName, True)
-                    MessageBox.Show($"Profile saved successfully to: {saveDialog.FileName}", "Success",
-                                  MessageBoxButtons.OK, MessageBoxIcon.Information)
+                    UpdateButtonStatus(btnSaveProfile, "success", "Profile saved successfully")
                 Catch ex As Exception
-                    MessageBox.Show($"Error saving profile: {ex.Message}", "Error",
-                                  MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    UpdateButtonStatus(btnSaveProfile, "error", "Error saving profile")
                 End Try
             End If
         End Using
@@ -2179,23 +2033,67 @@ Public Class frmMain
     End Sub
 
     Private Sub aboutToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles aboutToolStripMenuItem.Click
-        Dim aboutText As String = "RepoSQL - Professional SQL Script Generator" & vbCrLf & vbCrLf &
-                                 "Version: 2.0" & vbCrLf &
-                                 "Framework: .NET 8.0" & vbCrLf &
-                                 "Database: SQL Server 2012+" & vbCrLf & vbCrLf &
-                                 "Features:" & vbCrLf &
-                                 "• Modern, professional UI/UX" & vbCrLf &
-                                 "• Async database operations" & vbCrLf &
-                                 "• INI-based configuration with auto-save" & vbCrLf &
-                                 "• Settings for DROP statements and file overwrite" & vbCrLf &
-                                 "• Fixed filename SQL script generation" & vbCrLf &
-                                 "• Database backup and compression" & vbCrLf &
-                                 "• Comprehensive script generation" & vbCrLf &
-                                 "• Table search and filtering" & vbCrLf &
-                                 "• Windows and SQL authentication" & vbCrLf & vbCrLf &
-                                 "Generate professional SQL scripts and database backups with ease!"
+        ' Create custom about dialog instead of MessageBox
+        Using aboutForm As New Form()
+            aboutForm.Text = "About RepoSQL"
+            aboutForm.Size = New Size(500, 400)
+            aboutForm.StartPosition = FormStartPosition.CenterParent
+            aboutForm.FormBorderStyle = FormBorderStyle.FixedDialog
+            aboutForm.MaximizeBox = False
+            aboutForm.MinimizeBox = False
+            aboutForm.ShowIcon = False
 
-        MessageBox.Show(aboutText, "About RepoSQL", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            Dim aboutText As String = "RepoSQL - Professional SQL Script Generator" & vbCrLf & vbCrLf &
+                                     "Version: 2.0" & vbCrLf &
+                                     "Framework: .NET 8.0" & vbCrLf &
+                                     "Database: SQL Server 2012+" & vbCrLf & vbCrLf &
+                                     "Features:" & vbCrLf &
+                                     "• Modern, professional UI/UX" & vbCrLf &
+                                     "• Async database operations" & vbCrLf &
+                                     "• INI-based configuration with auto-save" & vbCrLf &
+                                     "• Settings for DROP statements and file overwrite" & vbCrLf &
+                                     "• Fixed filename SQL script generation" & vbCrLf &
+                                     "• Database backup and compression" & vbCrLf &
+                                     "• Comprehensive script generation" & vbCrLf &
+                                     "• Table search and filtering" & vbCrLf &
+                                     "• Windows and SQL authentication" & vbCrLf &
+                                     "• Auto-open output folder option" & vbCrLf & vbCrLf &
+                                     "Generate professional SQL scripts and database backups with ease!"
+
+            Dim textBox As New TextBox()
+            textBox.Multiline = True
+            textBox.ScrollBars = ScrollBars.Vertical
+            textBox.ReadOnly = True
+            textBox.Text = aboutText
+            textBox.Font = New Font("Segoe UI", 9)
+            textBox.Dock = DockStyle.Fill
+            textBox.BackColor = Color.White
+            textBox.Margin = New Padding(10)
+
+            Dim panel As New Panel()
+            panel.Dock = DockStyle.Fill
+            panel.Padding = New Padding(10)
+            panel.Controls.Add(textBox)
+
+            Dim buttonPanel As New Panel()
+            buttonPanel.Dock = DockStyle.Bottom
+            buttonPanel.Height = 50
+            buttonPanel.Padding = New Padding(10)
+
+            Dim okButton As New Button()
+            okButton.Text = "OK"
+            okButton.DialogResult = DialogResult.OK
+            okButton.Anchor = AnchorStyles.Bottom Or AnchorStyles.Right
+            okButton.Location = New Point(buttonPanel.Width - 90, 15)
+            okButton.Size = New Size(75, 25)
+
+            buttonPanel.Controls.Add(okButton)
+            aboutForm.Controls.Add(panel)
+            aboutForm.Controls.Add(buttonPanel)
+            aboutForm.AcceptButton = okButton
+
+            aboutForm.ShowDialog(Me)
+        End Using
     End Sub
 
 #End Region
@@ -2207,21 +2105,16 @@ Public Class frmMain
     ''' </summary>
     Private Sub ManualSaveConfig()
         SaveIniConfig()
-        MessageBox.Show("Configuration saved to sconfig.ini", "Configuration Saved",
-                       MessageBoxButtons.OK, MessageBoxIcon.Information)
+        UpdateStatus("Configuration saved to sconfig.ini")
     End Sub
 
     ''' <summary>
     ''' Manually reload configuration
     ''' </summary>
     Private Sub ManualLoadConfig()
-        If MessageBox.Show("Reload configuration from sconfig.ini? This will overwrite current settings.",
-                          "Reload Configuration", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-            LoadIniConfig()
-            LoadGenerationSettings()
-            MessageBox.Show("Configuration reloaded from sconfig.ini", "Configuration Loaded",
-                           MessageBoxButtons.OK, MessageBoxIcon.Information)
-        End If
+        LoadIniConfig()
+        LoadGenerationSettings()
+        UpdateStatus("Configuration reloaded from sconfig.ini")
     End Sub
 
 #End Region
